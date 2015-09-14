@@ -13,16 +13,17 @@ set(SOURCES ${PROJECT_SOURCE_DIR}/src/main.cpp
 			${PROJECT_SOURCE_DIR}/include/OpenGLWindow.h
 
 )
-# define this if you want to include the stanford data sets
-# these are very big and make compilation time huge
-add_definitions(-DADDLARGEMODELS)
 
 # see what platform we are on and set platform defines
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	add_definitions(-DDARWIN)
+	find_library(MACGL OpenGL)
+	set ( PROJECT_LINK_LIBS -lNGL ${MACGL})
 
-elif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	add_definitions(-DLINUX)
+	set ( PROJECT_LINK_LIBS -lNGL -lGL)
+
 endif()
 
 
@@ -30,6 +31,9 @@ endif()
 #disable -rdynamic
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
+# define this if you want to include the stanford data sets
+# these are very big and make compilation time huge
+add_definitions(-DADDLARGEMODELS)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -40,7 +44,6 @@ add_definitions(-O2 -D_FILE_OFFSET_BITS=64 -fPIC)
 
 
 # now add NGL specific values
-set ( PROJECT_LINK_LIBS -lNGL -lGL)
 link_directories( $ENV{HOME}/NGL/lib )
 # as NGL uses Qt we need to define this flag
 add_definitions(-DQT5BUILD)
