@@ -22,7 +22,7 @@ const static float INCREMENT=0.01;
 //----------------------------------------------------------------------------------------------------------------------
 const static float ZOOM=0.1;
 
-NGLScene::NGLScene(QWindow *_parent) : OpenGLWindow(_parent)
+NGLScene::NGLScene()
 {
   // Now set the initial GLWindow attributes to default values
   // Roate is false
@@ -91,32 +91,30 @@ void NGLScene::createCameras()
   Fcam.setShape(m_fov,m_aspect, 0.5f,150.0f);
   m_cameras.push_back(Fcam);
 }
-void NGLScene::resizeEvent(QResizeEvent *_event )
+void NGLScene::resizeGL(int _w, int _h)
 {
   if(isExposed())
   {
-  int w=_event->size().width();
-  int h=_event->size().height();
-  m_aspect=(float)w/h;
+  m_aspect=(float)_w/_h;
   // now set the camera values
-  m_text->setScreenSize(w,h);
+  m_text->setScreenSize(_w,_h);
 
   float x,y;
   float mw=1490;
   float mh=900;
-  x=1.1-float(mw-w)/mw;
-  y=1.1-float(mh-h)/mh;
-  std::cout<<w<<" "<<h<<"\n";
+  x=1.1-float(mw-_w)/mw;
+  y=1.1-float(mh-_h)/mh;
+  std::cout<<_w<<" "<<_h<<"\n";
   m_text->setTransform(x,y);
   // set the viewport for openGL
-  glViewport(0,0,w,h);
+  glViewport(0,0,_w,_h);
   // now set the camera size values as the screen size has changed
-  renderLater();
+  update();
   }
 }
 
 
-void NGLScene::initialize()
+void NGLScene::initializeGL()
 {
   ngl::NGLInit::instance();
   glClearColor(0.4f, 0.4f, 0.4f, 1.0f);			   // Grey Background
@@ -207,7 +205,7 @@ void NGLScene::loadMatricesToShader()
 
 }
 
-void NGLScene::render()
+void NGLScene::paintGL()
 {
   // grab an instance of the shader manager
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
@@ -405,7 +403,7 @@ void NGLScene::mouseMoveEvent (QMouseEvent * _event)
     m_spinYFace += (float) 0.5f * diffx;
     m_origX = _event->x();
     m_origY = _event->y();
-    renderLater();
+    update();
 
   }
         // right mouse translate code
@@ -417,7 +415,7 @@ void NGLScene::mouseMoveEvent (QMouseEvent * _event)
     m_origYPos=_event->y();
     m_modelPos.m_x += INCREMENT * diffX;
     m_modelPos.m_y -= INCREMENT * diffY;
-    renderLater();
+    update();
 
    }
 }
@@ -480,7 +478,7 @@ void NGLScene::wheelEvent(QWheelEvent *_event)
 	{
 		m_modelPos.m_z-=ZOOM;
 	}
-	renderLater();
+	update();
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -582,13 +580,13 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   default : break;
   }
   // finally update the GLWindow and re-draw
- renderLater();
+ update();
 }
 
 void NGLScene::timerEvent(QTimerEvent *_e)
 {
 
   ++m_rotation;
-  renderLater();
+  update();
 }
 
