@@ -90,8 +90,6 @@ void NGLScene::createCameras()
 }
 void NGLScene::resizeGL(int _w, int _h)
 {
-  if(isExposed())
-  {
   m_aspect=(float)_w/_h;
   // now set the camera values
   m_text->setScreenSize(_w,_h);
@@ -104,10 +102,10 @@ void NGLScene::resizeGL(int _w, int _h)
   std::cout<<_w<<" "<<_h<<"\n";
   m_text->setTransform(x,y);
   // set the viewport for openGL
-  glViewport(0,0,_w,_h);
+  glViewport(0,0,_w*devicePixelRatio() ,_h*devicePixelRatio());
   // now set the camera size values as the screen size has changed
   update();
-  }
+
 }
 
 
