@@ -130,8 +130,8 @@ void NGLScene::initializeGL()
 
   shader->createShaderProgram("Phong");
 
-  shader->attachShader("PhongVertex",ngl::VERTEX);
-  shader->attachShader("PhongFragment",ngl::FRAGMENT);
+  shader->attachShader("PhongVertex",ngl::ShaderType::VERTEX);
+  shader->attachShader("PhongFragment",ngl::ShaderType::FRAGMENT);
   shader->loadShaderSource("PhongVertex","shaders/PhongVertex.glsl");
   shader->loadShaderSource("PhongFragment","shaders/PhongFragment.glsl");
 
@@ -155,8 +155,8 @@ void NGLScene::initializeGL()
 
   shader->createShaderProgram("Colour");
 
-  shader->attachShader("ColourVertex",ngl::VERTEX);
-  shader->attachShader("ColourFragment",ngl::FRAGMENT);
+  shader->attachShader("ColourVertex",ngl::ShaderType::VERTEX);
+  shader->attachShader("ColourFragment",ngl::ShaderType::FRAGMENT);
   shader->loadShaderSource("ColourVertex","shaders/Colour.vs");
   shader->loadShaderSource("ColourFragment","shaders/Colour.fs");
 
