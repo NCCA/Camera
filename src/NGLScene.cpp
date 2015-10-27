@@ -149,7 +149,7 @@ void NGLScene::initializeGL()
   shader->setShaderParam1i("Normalize",1);
 
   // now set the material and light values
-  ngl::Material m(ngl::COPPER);
+  ngl::Material m(ngl::STDMAT::COPPER);
   m.loadToShader("material");
 
 
@@ -225,9 +225,9 @@ void NGLScene::paintGL()
   ngl::Mat4 lt=m_cameras[m_cameraIndex].getViewMatrix();
   lt.transpose();
 
-  ngl::Light L1(ngl::Vec3(-2,0,0),ngl::Colour(0.6,0.6,0.6,1),ngl::DIRECTIONALLIGHT);
-  ngl::Light L2(ngl::Vec3(2,0,0),ngl::Colour(0.6,0.6,0.6,1),ngl::DIRECTIONALLIGHT);
-  ngl::Light L3(ngl::Vec3(0,2,0),ngl::Colour(0.6 ,0.6,0.6,1),ngl::POINTLIGHT);
+  ngl::Light L1(ngl::Vec3(-2,0,0),ngl::Colour(0.6,0.6,0.6,1),ngl::LightModes::DIRECTIONALLIGHT);
+  ngl::Light L2(ngl::Vec3(2,0,0),ngl::Colour(0.6,0.6,0.6,1),ngl::LightModes::DIRECTIONALLIGHT);
+  ngl::Light L3(ngl::Vec3(0,2,0),ngl::Colour(0.6 ,0.6,0.6,1),ngl::LightModes::POINTLIGHT);
   L1.setSpecColour(ngl::Colour(1,1,1));
   L2.setSpecColour(ngl::Colour(1,1,1));
   L3.setSpecColour(ngl::Colour(1,1,1));
