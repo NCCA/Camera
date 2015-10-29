@@ -32,7 +32,7 @@ NGLScene::NGLScene()
   m_spinYFace=0;
   // now set the inital camera values
   m_cameraIndex=0;
-  m_moveMode=MOVEEYE;
+  m_moveMode=CamMode::MOVEEYE;
   m_drawHelp=true;
   m_fov=65.0;
   m_aspect=1024.0/768.0;
@@ -48,7 +48,6 @@ NGLScene::NGLScene()
 NGLScene::~NGLScene()
 {
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
-  delete m_text;
 }
 
 void NGLScene::createCameras()
@@ -88,23 +87,11 @@ void NGLScene::createCameras()
   Fcam.setShape(m_fov,m_aspect, 0.5f,150.0f);
   m_cameras.push_back(Fcam);
 }
-void NGLScene::resizeGL(int _w, int _h)
+void NGLScene::resizeGL(QResizeEvent *_event)
 {
-  m_aspect=(float)_w/_h;
-  // now set the camera values
-  m_text->setScreenSize(_w,_h);
-
-  float x,y;
-  float mw=1490;
-  float mh=900;
-  x=1.1-float(mw-_w)/mw;
-  y=1.1-float(mh-_h)/mh;
-  std::cout<<_w<<" "<<_h<<"\n";
-  m_text->setTransform(x,y);
-  // set the viewport for openGL
-  glViewport(0,0,_w*devicePixelRatio() ,_h*devicePixelRatio());
-  // now set the camera size values as the screen size has changed
-  update();
+  m_aspect=(float)_event->size().width()/_event->size().height();
+  m_width=_event->size().width()*devicePixelRatio();
+  m_height=_event->size().height()*devicePixelRatio();
 
 }
 
@@ -170,12 +157,8 @@ void NGLScene::initializeGL()
   (*shader)["Colour"]->use();
   shader->setShaderParam4f("Colour",1,1,1,1);
 
-  m_text = new  ngl::Text(QFont("Arial",18));
+  m_text.reset(new  ngl::Text(QFont("Arial",18)));
   m_text->setScreenSize(this->size().width(),this->size().height());
-  // as re-size is not explicitly called we need to do this.
-  glViewport(0,0,width(),height());
-
-
 }
 
 
@@ -206,10 +189,19 @@ void NGLScene::paintGL()
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(0,0,m_width,m_height);
+  // set the text transforms
+  float x,y;
+  float mw=1490;
+  float mh=900;
+  x=1.1-float(mw-m_width)/mw;
+  y=1.1-float(mh-m_height)/mh;
+  m_text->setScreenSize(width(),height());
+  m_text->setTransform(x,y);
+
   // Rotation based on the mouse position for our global
   // transform
 
-  ngl::Transformation trans;
   // Rotation based on the mouse position for our global
   // transform
   ngl::Mat4 rotX;
@@ -339,10 +331,10 @@ void NGLScene::paintGL()
    QString mode;
    switch ( m_moveMode)
    {
-     case MOVEEYE : mode=QString("Move Eye"); break;
-     case MOVELOOK : mode=QString("Move Look"); break;
-     case MOVEBOTH : mode=QString("Move Both"); break;
-     case MOVESLIDE : mode=QString("Move Slide"); break;
+     case CamMode::MOVEEYE : mode=QString("Move Eye"); break;
+     case CamMode::MOVELOOK : mode=QString("Move Look"); break;
+     case CamMode::MOVEBOTH : mode=QString("Move Both"); break;
+     case CamMode::MOVESLIDE : mode=QString("Move Slide"); break;
    }
    const static int tp=880;
    QString text=QString("Active Camera %1 current mode=%2").arg(m_cameraIndex).arg(mode);
@@ -491,10 +483,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   case Qt::Key_3 : { m_cameraIndex=2; break; }
   case Qt::Key_4 : { m_cameraIndex=3; break; }
 
-  case Qt::Key_E : { m_moveMode=MOVEEYE; break; }
-  case Qt::Key_L : { m_moveMode=MOVELOOK; break; }
-  case Qt::Key_B : { m_moveMode=MOVEBOTH; break; }
-  case Qt::Key_S : { m_moveMode=MOVESLIDE; break; }
+  case Qt::Key_E : { m_moveMode=CamMode::MOVEEYE; break; }
+  case Qt::Key_L : { m_moveMode=CamMode::MOVELOOK; break; }
+  case Qt::Key_B : { m_moveMode=CamMode::MOVEBOTH; break; }
+  case Qt::Key_S : { m_moveMode=CamMode::MOVESLIDE; break; }
   case Qt::Key_H : { m_drawHelp^=true; break; }
   case Qt::Key_Plus : { ++m_fov; setCameraShape(); break; }
   case Qt::Key_Minus :{ --m_fov; setCameraShape(); break; }
@@ -510,10 +502,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   {
     switch (m_moveMode)
     {
-      case MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(keyIncrement,0,0);  break;}
-      case MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(keyIncrement,0,0); break;}
-      case MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(keyIncrement,0,0); break;}
-      case MOVESLIDE : { m_cameras[m_cameraIndex].slide(keyIncrement,0,0);    break;}
+      case CamMode::MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(keyIncrement,0,0);  break;}
+      case CamMode::MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(keyIncrement,0,0); break;}
+      case CamMode::MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(keyIncrement,0,0); break;}
+      case CamMode::MOVESLIDE : { m_cameras[m_cameraIndex].slide(keyIncrement,0,0);    break;}
     }
   break;
   } // end move left
@@ -521,10 +513,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   {
     switch (m_moveMode)
     {
-      case MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(-keyIncrement,0,0);  break;}
-      case MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(-keyIncrement,0,0); break;}
-      case MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(-keyIncrement,0,0); break;}
-      case MOVESLIDE : { m_cameras[m_cameraIndex].slide(-keyIncrement,0,0);    break;}
+      case CamMode::MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(-keyIncrement,0,0);  break;}
+      case CamMode::MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(-keyIncrement,0,0); break;}
+      case CamMode::MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(-keyIncrement,0,0); break;}
+      case CamMode::MOVESLIDE : { m_cameras[m_cameraIndex].slide(-keyIncrement,0,0);    break;}
     }
   break;
   } // end move right
@@ -532,10 +524,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   {
     switch (m_moveMode)
     {
-      case MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,keyIncrement,0);  break;}
-      case MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,keyIncrement,0); break;}
-      case MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,keyIncrement,0); break;}
-      case MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,keyIncrement,0);    break;}
+      case CamMode::MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,keyIncrement,0);  break;}
+      case CamMode::MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,keyIncrement,0); break;}
+      case CamMode::MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,keyIncrement,0); break;}
+      case CamMode::MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,keyIncrement,0);    break;}
     }
   break;
   } // end move up
@@ -543,10 +535,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   {
     switch (m_moveMode)
     {
-      case MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,-keyIncrement,0);  break;}
-      case MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,-keyIncrement,0); break;}
-      case MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,-keyIncrement,0); break;}
-      case MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,-keyIncrement,0);    break;}
+      case CamMode::MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,-keyIncrement,0);  break;}
+      case CamMode::MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,-keyIncrement,0); break;}
+      case CamMode::MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,-keyIncrement,0); break;}
+      case CamMode::MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,-keyIncrement,0);    break;}
     }
   break;
   } // end move down
@@ -554,10 +546,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   {
     switch (m_moveMode)
     {
-      case MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,0,keyIncrement);  break;}
-      case MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,0,keyIncrement); break;}
-      case MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,0,keyIncrement); break;}
-      case MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,0,keyIncrement);    break;}
+      case CamMode::MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,0,keyIncrement);  break;}
+      case CamMode::MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,0,keyIncrement); break;}
+      case CamMode::MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,0,keyIncrement); break;}
+      case CamMode::MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,0,keyIncrement);    break;}
     }
   break;
   } // end move out
@@ -565,10 +557,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   {
     switch (m_moveMode)
     {
-      case MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,0,-keyIncrement);  break;}
-      case MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,0,-keyIncrement); break;}
-      case MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,0,-keyIncrement); break;}
-      case MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,0,-keyIncrement);    break;}
+      case CamMode::MOVEEYE :   { m_cameras[m_cameraIndex].moveEye(0,0,-keyIncrement);  break;}
+      case CamMode::MOVELOOK :  { m_cameras[m_cameraIndex].moveLook(0,0,-keyIncrement); break;}
+      case CamMode::MOVEBOTH :  { m_cameras[m_cameraIndex].moveBoth(0,0,-keyIncrement); break;}
+      case CamMode::MOVESLIDE : { m_cameras[m_cameraIndex].slide(0,0,-keyIncrement);    break;}
     }
   break;
   } // end move in
@@ -580,7 +572,6 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
 
 void NGLScene::timerEvent(QTimerEvent *_e)
 {
-
   ++m_rotation;
   update();
 }
