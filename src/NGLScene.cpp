@@ -42,8 +42,6 @@ NGLScene::NGLScene()
   m_lights[1]=true;
   m_lights[2]=true;
   setTitle("ngl::Camera and ngl::Transformation demo");
-  m_width=1024;
-  m_height=720;
 }
 
 
@@ -89,12 +87,11 @@ void NGLScene::createCameras()
   Fcam.setShape(m_fov,m_aspect, 0.5f,150.0f);
   m_cameras.push_back(Fcam);
 }
-void NGLScene::resizeGL(QResizeEvent *_event)
+void NGLScene::resizeEvent(QResizeEvent *_event)
 {
   m_aspect=(float)_event->size().width()/_event->size().height();
   m_width=_event->size().width()*devicePixelRatio();
   m_height=_event->size().height()*devicePixelRatio();
-
 }
 
 
@@ -192,8 +189,6 @@ void NGLScene::paintGL()
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glViewport(0,0,m_width,m_height);
-  m_text->setScreenSize(width(),height());
-
   // set the text transforms
   float x,y;
   float mw=1490;
@@ -413,10 +408,9 @@ void NGLScene::mouseMoveEvent (QMouseEvent * _event)
 
 void NGLScene::setCameraShape()
 {
-  int cameraSize=m_cameras.size();
-  for(int i=0; i<cameraSize; ++i)
+  for(auto &cam : m_cameras)
   {
-    m_cameras[i].setShape(m_fov,m_aspect, 0.2f,150.0f);
+    cam.setShape(m_fov,m_aspect, 0.2f,150.0f);
   }
 }
 //----------------------------------------------------------------------------------------------------------------------

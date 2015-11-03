@@ -44,7 +44,7 @@ class NGLScene : public QOpenGLWindow
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief this is called everytime we resize the scene
     //----------------------------------------------------------------------------------------------------------------------
-    void resizeGL(QResizeEvent *_event);
+    void resizeEvent(QResizeEvent *_event);
 
 
 private:
