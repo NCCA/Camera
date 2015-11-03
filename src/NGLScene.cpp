@@ -87,18 +87,13 @@ void NGLScene::createCameras()
   Fcam.setShape(m_fov,m_aspect, 0.5f,150.0f);
   m_cameras.push_back(Fcam);
 }
-void NGLScene::resizeEvent(QResizeEvent *_event)
-{
-  m_aspect=(float)_event->size().width()/_event->size().height();
-  m_width=_event->size().width()*devicePixelRatio();
-  m_height=_event->size().height()*devicePixelRatio();
-}
 
-void NGLScene::resizeGL(QResizeEvent *_event)
+
+void NGLScene::resizeGL(int _w , int _h)
 {
-  m_aspect=(float)_event->size().width()/_event->size().height();
-  m_width=_event->size().width()*devicePixelRatio();
-  m_height=_event->size().height()*devicePixelRatio();
+  m_aspect=(float)_w/_h;
+  m_width=_w*devicePixelRatio();
+  m_height=_h*devicePixelRatio();
 }
 
 void NGLScene::initializeGL()
