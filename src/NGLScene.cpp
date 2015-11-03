@@ -94,17 +94,15 @@ void NGLScene::resizeGL(int _w , int _h)
   m_aspect=(float)_w/_h;
   m_width=_w*devicePixelRatio();
   m_height=_h*devicePixelRatio();
-  std::cout<<"resizeGL int\n";
 }
 
 void NGLScene::resizeGL(QResizeEvent *_event)
 {
-  int _w=_event->size().width();
-  int _h=_event->size().height();
-  m_aspect=(float)_w/_h;
-  m_width=_w*devicePixelRatio();
-  m_height=_h*devicePixelRatio();
-  std::cout<<"resizeGL int\n";
+  int w=_event->size().width();
+  int h=_event->size().height();
+  m_aspect=(float)w/h;
+  m_width=w*devicePixelRatio();
+  m_height=h*devicePixelRatio();
 }
 
 void NGLScene::initializeGL()
