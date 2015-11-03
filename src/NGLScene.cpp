@@ -94,6 +94,12 @@ void NGLScene::resizeEvent(QResizeEvent *_event)
   m_height=_event->size().height()*devicePixelRatio();
 }
 
+void NGLScene::resizeGL(QResizeEvent *_event)
+{
+  m_aspect=(float)_event->size().width()/_event->size().height();
+  m_width=_event->size().width()*devicePixelRatio();
+  m_height=_event->size().height()*devicePixelRatio();
+}
 
 void NGLScene::initializeGL()
 {
