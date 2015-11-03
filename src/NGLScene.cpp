@@ -42,6 +42,8 @@ NGLScene::NGLScene()
   m_lights[1]=true;
   m_lights[2]=true;
   setTitle("ngl::Camera and ngl::Transformation demo");
+  m_width=1024;
+  m_height=720;
 }
 
 
@@ -158,7 +160,7 @@ void NGLScene::initializeGL()
   shader->setShaderParam4f("Colour",1,1,1,1);
 
   m_text.reset(new  ngl::Text(QFont("Arial",18)));
-  m_text->setScreenSize(this->size().width(),this->size().height());
+  m_text->setScreenSize(width(),height());
 }
 
 
@@ -190,6 +192,8 @@ void NGLScene::paintGL()
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glViewport(0,0,m_width,m_height);
+  m_text->setScreenSize(width(),height());
+
   // set the text transforms
   float x,y;
   float mw=1490;
