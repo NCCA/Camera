@@ -94,6 +94,7 @@ void NGLScene::resizeGL(int _w , int _h)
   m_aspect=(float)_w/_h;
   m_width=_w*devicePixelRatio();
   m_height=_h*devicePixelRatio();
+  setCameraShape();
 }
 
 void NGLScene::resizeGL(QResizeEvent *_event)
@@ -103,6 +104,7 @@ void NGLScene::resizeGL(QResizeEvent *_event)
   m_aspect=(float)w/h;
   m_width=w*devicePixelRatio();
   m_height=h*devicePixelRatio();
+  setCameraShape();
 }
 
 void NGLScene::initializeGL()
@@ -583,4 +585,3 @@ void NGLScene::timerEvent(QTimerEvent *_e)
   ++m_rotation;
   update();
 }
-
