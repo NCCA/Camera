@@ -59,15 +59,15 @@ void NGLScene::createCameras()
   ngl::Camera Fcam;
   // set the different vectors for the camera positions
   ngl::Vec3 eye(0.0f,5.0f,8.0f);
-  ngl::Vec3 look=0.0f;
+  ngl::Vec3 look=ngl::Vec3::zero();
   ngl::Vec3 up(0,1,0);
 
   ngl::Vec3 topEye(0.0f,8.0f,0.0f);
-  ngl::Vec3 topLook=0.0f;
+  ngl::Vec3 topLook=ngl::Vec3::zero();
   ngl::Vec3 topUp(0.0f,0.0f,1.0f);
 
   ngl::Vec3 sideEye(8.0f,0.0f,0.0f);
-  ngl::Vec3 sideLook=0.0f;
+  ngl::Vec3 sideLook=ngl::Vec3::zero();
   ngl::Vec3 sideUp(0.0f,1.0f,0.0f);
 
   ngl::Vec3 frontEye(5.0f,2.0f,8.0f);
