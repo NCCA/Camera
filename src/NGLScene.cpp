@@ -13,29 +13,16 @@
 #include <ngl/VAOPrimitives.h>
 #include <ngl/ShaderLib.h>
 
-//----------------------------------------------------------------------------------------------------------------------
-/// @brief the increment for x/y translation with mouse movement
-//----------------------------------------------------------------------------------------------------------------------
-const static float INCREMENT=0.01;
-//----------------------------------------------------------------------------------------------------------------------
-/// @brief the increment for the wheel zoom
-//----------------------------------------------------------------------------------------------------------------------
-const static float ZOOM=0.1;
-
 NGLScene::NGLScene()
 {
   // Now set the initial GLWindow attributes to default values
-  // Roate is false
-  m_rotate=false;
-  // mouse rotation values set to 0
-  m_spinXFace=0;
-  m_spinYFace=0;
+
   // now set the inital camera values
   m_cameraIndex=0;
   m_moveMode=CamMode::MOVEEYE;
   m_drawHelp=true;
-  m_fov=65.0;
-  m_aspect=1024.0/768.0;
+  m_fov=65.0f;
+  m_aspect=1024.0f/768.0f;
   m_rotation=0;
   startTimer(20);
   m_lights[0]=true;
@@ -89,21 +76,12 @@ void NGLScene::createCameras()
 }
 
 
-void NGLScene::resizeGL(int _w , int _h)
+void NGLScene::resizeGL( int _w, int _h )
 {
-  m_aspect=(float)_w/_h;
-  m_width=_w*devicePixelRatio();
-  m_height=_h*devicePixelRatio();
-}
-
-void NGLScene::resizeGL(QResizeEvent *_event)
-{
-  int w=_event->size().width();
-  int h=_event->size().height();
-  m_aspect=(float)w/h;
-  m_width=w*devicePixelRatio();
-  m_height=h*devicePixelRatio();
-}
+  m_aspect=static_cast<float>(_w/_h);
+  m_win.width=static_cast<int>(_w*devicePixelRatio());
+  m_win.height=static_cast<int>(_h*devicePixelRatio());
+ }
 
 void NGLScene::initializeGL()
 {
@@ -122,25 +100,32 @@ void NGLScene::initializeGL()
 
   // now to load the shader and set the values
   // grab an instance of shader manager
-  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+  ngl::ShaderLib* shader = ngl::ShaderLib::instance();
+  // we are creating a shader called Phong to save typos
+  // in the code create some constexpr
+  constexpr auto shaderProgram = "Phong";
+  constexpr auto vertexShader  = "PhongVertex";
+  constexpr auto fragShader    = "PhongFragment";
+  // create the shader program
+  shader->createShaderProgram( shaderProgram );
+  // now we are going to create empty shaders for Frag and Vert
+  shader->attachShader( vertexShader, ngl::ShaderType::VERTEX );
+  shader->attachShader( fragShader, ngl::ShaderType::FRAGMENT );
+  // attach the source
+  shader->loadShaderSource( vertexShader, "shaders/PhongVertex.glsl" );
+  shader->loadShaderSource( fragShader, "shaders/PhongFragment.glsl" );
+  // compile the shaders
+  shader->compileShader( vertexShader );
+  shader->compileShader( fragShader );
+  // add them to the program
+  shader->attachShaderToProgram( shaderProgram, vertexShader );
+  shader->attachShaderToProgram( shaderProgram, fragShader );
 
-  shader->createShaderProgram("Phong");
 
-  shader->attachShader("PhongVertex",ngl::ShaderType::VERTEX);
-  shader->attachShader("PhongFragment",ngl::ShaderType::FRAGMENT);
-  shader->loadShaderSource("PhongVertex","shaders/PhongVertex.glsl");
-  shader->loadShaderSource("PhongFragment","shaders/PhongFragment.glsl");
-
-  shader->compileShader("PhongVertex");
-  shader->compileShader("PhongFragment");
-  shader->attachShaderToProgram("Phong","PhongVertex");
-  shader->attachShaderToProgram("Phong","PhongFragment");
-
-
-
-  shader->linkProgramObject("Phong");
-  (*shader)["Phong"]->use();
-
+  // now we have associated that data we can link the shader
+  shader->linkProgramObject( shaderProgram );
+  // and make it active ready to load values
+  ( *shader )[ shaderProgram ]->use();
   // now pass the modelView and projection values to the shader
   shader->setShaderParam1i("Normalize",1);
 
@@ -198,13 +183,13 @@ void NGLScene::paintGL()
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0,0,m_width,m_height);
+  glViewport(0,0,m_win.width,m_win.height);
   // set the text transforms
   float x,y;
   float mw=1490;
   float mh=900;
-  x=1.1-float(mw-m_width)/mw;
-  y=1.1-float(mh-m_height)/mh;
+  x=1.1f-float(mw-m_win.width)/mw;
+  y=1.1f-float(mh-m_win.height)/mh;
   m_text->setScreenSize(width(),height());
   m_text->setTransform(x,y);
 
@@ -216,8 +201,8 @@ void NGLScene::paintGL()
   ngl::Mat4 rotX;
   ngl::Mat4 rotY;
   // create the rotation matrices
-  rotX.rotateX(m_spinXFace);
-  rotY.rotateY(m_spinYFace);
+  rotX.rotateX(m_win.spinXFace);
+  rotY.rotateY(m_win.spinYFace);
   // multiply the rotations
   m_mouseGlobalTX=rotY*rotX;
   // now set this value in the shader for the current Camera, we do all 3 elements as they
@@ -385,37 +370,6 @@ void NGLScene::paintGL()
   }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-void NGLScene::mouseMoveEvent (QMouseEvent * _event)
-{
-  // note the method buttons() is the button state when event was called
-  // this is different from button() which is used to check which button was
-  // pressed when the mousePress/Release event is generated
-  if(m_rotate && _event->buttons() == Qt::LeftButton)
-  {
-    int diffx=_event->x()-m_origX;
-    int diffy=_event->y()-m_origY;
-    m_spinXFace += (float) 0.5f * diffy;
-    m_spinYFace += (float) 0.5f * diffx;
-    m_origX = _event->x();
-    m_origY = _event->y();
-    update();
-
-  }
-        // right mouse translate code
-  else if(m_translate && _event->buttons() == Qt::RightButton)
-  {
-    int diffX = (int)(_event->x() - m_origXPos);
-    int diffY = (int)(_event->y() - m_origYPos);
-    m_origXPos=_event->x();
-    m_origYPos=_event->y();
-    m_modelPos.m_x += INCREMENT * diffX;
-    m_modelPos.m_y -= INCREMENT * diffY;
-    update();
-
-   }
-}
-
 void NGLScene::setCameraShape()
 {
   for(auto &cam : m_cameras)
@@ -423,58 +377,89 @@ void NGLScene::setCameraShape()
     cam.setShape(m_fov,m_aspect, 0.2f,150.0f);
   }
 }
+
 //----------------------------------------------------------------------------------------------------------------------
-void NGLScene::mousePressEvent ( QMouseEvent * _event)
+void NGLScene::mouseMoveEvent( QMouseEvent* _event )
 {
-  // this method is called when the mouse button is pressed in this case we
-  // store the value where the maouse was clicked (x,y) and set the Rotate flag to true
-  if(_event->button() == Qt::LeftButton)
+  // note the method buttons() is the button state when event was called
+  // that is different from button() which is used to check which button was
+  // pressed when the mousePress/Release event is generated
+  if ( m_win.rotate && _event->buttons() == Qt::LeftButton )
   {
-    m_origX = _event->x();
-    m_origY = _event->y();
-    m_rotate =true;
+    int diffx = _event->x() - m_win.origX;
+    int diffy = _event->y() - m_win.origY;
+    m_win.spinXFace += static_cast<int>( 0.5f * diffy );
+    m_win.spinYFace += static_cast<int>( 0.5f * diffx );
+    m_win.origX = _event->x();
+    m_win.origY = _event->y();
+    update();
+  }
+  // right mouse translate code
+  else if ( m_win.translate && _event->buttons() == Qt::RightButton )
+  {
+    int diffX      = static_cast<int>( _event->x() - m_win.origXPos );
+    int diffY      = static_cast<int>( _event->y() - m_win.origYPos );
+    m_win.origXPos = _event->x();
+    m_win.origYPos = _event->y();
+    m_modelPos.m_x += INCREMENT * diffX;
+    m_modelPos.m_y -= INCREMENT * diffY;
+    update();
+  }
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+void NGLScene::mousePressEvent( QMouseEvent* _event )
+{
+  // that method is called when the mouse button is pressed in this case we
+  // store the value where the maouse was clicked (x,y) and set the Rotate flag to true
+  if ( _event->button() == Qt::LeftButton )
+  {
+    m_win.origX  = _event->x();
+    m_win.origY  = _event->y();
+    m_win.rotate = true;
   }
   // right mouse translate mode
-  else if(_event->button() == Qt::RightButton)
+  else if ( _event->button() == Qt::RightButton )
   {
-    m_origXPos = _event->x();
-    m_origYPos = _event->y();
-    m_translate=true;
+    m_win.origXPos  = _event->x();
+    m_win.origYPos  = _event->y();
+    m_win.translate = true;
   }
-
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void NGLScene::mouseReleaseEvent ( QMouseEvent * _event )
+void NGLScene::mouseReleaseEvent( QMouseEvent* _event )
 {
-  // this event is called when the mouse button is released
+  // that event is called when the mouse button is released
   // we then set Rotate to false
-  if (_event->button() == Qt::LeftButton)
+  if ( _event->button() == Qt::LeftButton )
   {
-    m_rotate=false;
+    m_win.rotate = false;
   }
-        // right mouse translate mode
-  if (_event->button() == Qt::RightButton)
+  // right mouse translate mode
+  if ( _event->button() == Qt::RightButton )
   {
-    m_translate=false;
+    m_win.translate = false;
   }
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void NGLScene::wheelEvent(QWheelEvent *_event)
+void NGLScene::wheelEvent( QWheelEvent* _event )
 {
 
-	// check the diff of the wheel position (0 means no change)
-	if(_event->delta() > 0)
-	{
-		m_modelPos.m_z+=ZOOM;
-	}
-	else if(_event->delta() <0 )
-	{
-		m_modelPos.m_z-=ZOOM;
-	}
-	update();
+  // check the diff of the wheel position (0 means no change)
+  if ( _event->delta() > 0 )
+  {
+    m_modelPos.m_z += ZOOM;
+  }
+  else if ( _event->delta() < 0 )
+  {
+    m_modelPos.m_z -= ZOOM;
+  }
+  update();
 }
+
 //----------------------------------------------------------------------------------------------------------------------
 
 void NGLScene::keyPressEvent(QKeyEvent *_event)
