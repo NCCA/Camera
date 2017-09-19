@@ -127,7 +127,7 @@ void NGLScene::initializeGL()
   // and make it active ready to load values
   ( *shader )[ shaderProgram ]->use();
   // now pass the modelView and projection values to the shader
-  shader->setShaderParam1i("Normalize",1);
+  shader->setUniform("Normalize",1);
 
   // now set the material and light values
   ngl::Material m(ngl::STDMAT::COPPER);
@@ -149,7 +149,7 @@ void NGLScene::initializeGL()
   shader->bindAttribute("Colour",0,"inVert");
   shader->linkProgramObject("Colour");
   (*shader)["Colour"]->use();
-  shader->setShaderParam4f("Colour",1,1,1,1);
+  shader->setUniform("Colour",1.0f,1.0f,1.0f,1.0f);
 
   m_text.reset(new  ngl::Text(QFont("Arial",18)));
   m_text->setScreenSize(width(),height());
@@ -169,11 +169,11 @@ void NGLScene::loadMatricesToShader()
   MVP=  MV*m_cameras[m_cameraIndex].getProjectionMatrix();
   normalMatrix=MV;
   normalMatrix.inverse();
-  shader->setShaderParamFromMat4("MV",MV);
-  shader->setShaderParamFromMat4("MVP",MVP);
-  shader->setShaderParamFromMat3("normalMatrix",normalMatrix);
-  shader->setShaderParamFromMat4("M",M);
-  shader->setShaderParam3f("viewerPos",m_cameras[m_cameraIndex].getEye().m_x,m_cameras[m_cameraIndex].getEye().m_y,m_cameras[m_cameraIndex].getEye().m_z);
+  shader->setUniform("MV",MV);
+  shader->setUniform("MVP",MVP);
+  shader->setUniform("normalMatrix",normalMatrix);
+  shader->setUniform("M",M);
+  shader->setUniform("viewerPos",m_cameras[m_cameraIndex].getEye().toVec3());
 
 }
 
@@ -295,7 +295,7 @@ void NGLScene::paintGL()
         m_cameras[m_cameraIndex].getViewMatrix() *
         m_cameras[m_cameraIndex].getProjectionMatrix();
 
-    shader->setShaderParamFromMat4("MVP",MVP);
+    shader->setUniform("MVP",MVP);
 
     // now we pass this modelling transform to the shader ModelMatrix
     // finally draw the plane
