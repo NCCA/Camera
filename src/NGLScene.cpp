@@ -164,11 +164,11 @@ void NGLScene::loadMatricesToShader()
   ngl::Mat4 MVP;
   ngl::Mat3 normalMatrix;
   ngl::Mat4 M;
-  M=m_transform.getMatrix()*m_mouseGlobalTX;
-  MV= M* m_cameras[m_cameraIndex].getViewMatrix();
-  MVP=  MV*m_cameras[m_cameraIndex].getProjectionMatrix();
+  M  = m_mouseGlobalTX*m_transform.getMatrix();
+  MV = m_cameras[m_cameraIndex].getViewMatrix() * M;
+  MVP= m_cameras[m_cameraIndex].getProjectionMatrix()*MV;
   normalMatrix=MV;
-  normalMatrix.inverse();
+  normalMatrix.inverse().transpose();
   shader->setUniform("MV",MV);
   shader->setUniform("MVP",MVP);
   shader->setUniform("normalMatrix",normalMatrix);
@@ -257,7 +257,7 @@ void NGLScene::paintGL()
   {
 
     // translate into position
-    m_transform.setPosition(-1.8,0.1,0);
+    m_transform.setPosition(-1.8f,0.1f,0);
     // rotate object
     m_transform.setRotation(m_rotation,m_rotation,m_rotation);
     // pass values to the shader
@@ -290,11 +290,9 @@ void NGLScene::paintGL()
     // translate the grid down by -0.5 so it is at the base level of the objects
     m_transform.setPosition(0,-0.5,0);
     ngl::Mat4 MVP;
-    MVP=m_mouseGlobalTX*
-        m_transform.getMatrix() *
-        m_cameras[m_cameraIndex].getViewMatrix() *
-        m_cameras[m_cameraIndex].getProjectionMatrix();
-
+    MVP=m_cameras[m_cameraIndex].getVPMatrix() *
+        m_mouseGlobalTX *
+        m_transform.getMatrix() ;
     shader->setUniform("MVP",MVP);
 
     // now we pass this modelling transform to the shader ModelMatrix
