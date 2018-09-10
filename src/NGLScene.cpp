@@ -6,13 +6,11 @@
 
 #include <QApplication>
 #include "NGLScene.h"
-#include <ngl/Camera.h>
-#include <ngl/Light.h>
-#include <ngl/Material.h>
 #include <ngl/NGLInit.h>
 #include <ngl/VAOPrimitives.h>
 #include <ngl/ShaderLib.h>
-
+#include <ngl/fmt/format.h>
+constexpr auto shaderProgram="PBR";
 NGLScene::NGLScene()
 {
   // Now set the initial GLWindow attributes to default values
@@ -40,10 +38,10 @@ NGLScene::~NGLScene()
 void NGLScene::createCameras()
 {
   // create a load of cameras
-  ngl::Camera cam;
-  ngl::Camera Tcam;
-  ngl::Camera Scam;
-  ngl::Camera Fcam;
+  Camera cam;
+  Camera Tcam;
+  Camera Scam;
+  Camera Fcam;
   // set the different vectors for the camera positions
   ngl::Vec3 eye(0.0f,5.0f,8.0f);
   ngl::Vec3 look=ngl::Vec3::zero();
@@ -98,41 +96,51 @@ void NGLScene::initializeGL()
   prim->createLineGrid("plane",20,20,30);
   prim->createSphere("sphere",1.0,150);
 
+
+
   // now to load the shader and set the values
   // grab an instance of shader manager
   ngl::ShaderLib* shader = ngl::ShaderLib::instance();
-  // we are creating a shader called Phong to save typos
+  // we are creating a shader called PBR to save typos
   // in the code create some constexpr
-  constexpr auto shaderProgram = "Phong";
-  constexpr auto vertexShader  = "PhongVertex";
-  constexpr auto fragShader    = "PhongFragment";
+  constexpr auto vertexShader  = "PBRVertex";
+  constexpr auto fragShader    = "PBRFragment";
   // create the shader program
   shader->createShaderProgram( shaderProgram );
   // now we are going to create empty shaders for Frag and Vert
   shader->attachShader( vertexShader, ngl::ShaderType::VERTEX );
   shader->attachShader( fragShader, ngl::ShaderType::FRAGMENT );
   // attach the source
-  shader->loadShaderSource( vertexShader, "shaders/PhongVertex.glsl" );
-  shader->loadShaderSource( fragShader, "shaders/PhongFragment.glsl" );
+  shader->loadShaderSource( vertexShader, "shaders/PBRVertex.glsl" );
+  shader->loadShaderSource( fragShader, "shaders/PBRFragment.glsl" );
   // compile the shaders
   shader->compileShader( vertexShader );
   shader->compileShader( fragShader );
   // add them to the program
   shader->attachShaderToProgram( shaderProgram, vertexShader );
   shader->attachShaderToProgram( shaderProgram, fragShader );
-
-
   // now we have associated that data we can link the shader
   shader->linkProgramObject( shaderProgram );
   // and make it active ready to load values
   ( *shader )[ shaderProgram ]->use();
-  // now pass the modelView and projection values to the shader
-  shader->setUniform("Normalize",1);
+ // We now create our view matrix for a static camera
+  ngl::Vec3 from( 0.0f, 2.0f, 2.0f );
+  ngl::Vec3 to( 0.0f, 0.0f, 0.0f );
+  ngl::Vec3 up( 0.0f, 1.0f, 0.0f );
+  // setup the default shader material and light porerties
+  // these are "uniform" so will retain their values
+  shader->setUniform("lightColour[0]",100.0f,100.0f,100.0f);
+  shader->setUniform("lightColour[1]",100.0f,100.0f,100.0f);
+  shader->setUniform("lightColour[2]",100.0f,100.0f,100.0f);
+  shader->setUniform("exposure",2.2f);
+  shader->setUniform("albedo",0.950f, 0.71f, 0.29f);
 
-  // now set the material and light values
-  ngl::Material m(ngl::STDMAT::COPPER);
-  m.loadToShader("material");
-
+  shader->setUniform("metallic",1.02f);
+  shader->setUniform("roughness",0.38f);
+  shader->setUniform("ao",0.2f);
+  shader->setUniform("lightPosition[0]",-2.0f,0.0f,1.0f);
+  shader->setUniform("lightPosition[1]", 2.0f,0.0f,1.0f);
+  shader->setUniform("lightPosition[2]", 0.0f,2.0f,1.0f);
 
   shader->createShaderProgram("Colour");
 
@@ -159,22 +167,37 @@ void NGLScene::initializeGL()
 void NGLScene::loadMatricesToShader()
 {
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+  shader->use("PBR");
+  struct transform
+  {
+    ngl::Mat4 MVP;
+    ngl::Mat4 normalMatrix;
+    ngl::Mat4 M;
+  };
 
-  ngl::Mat4 MV;
-  ngl::Mat4 MVP;
-  ngl::Mat3 normalMatrix;
-  ngl::Mat4 M;
-  M  = m_mouseGlobalTX*m_transform.getMatrix();
-  MV = m_cameras[m_cameraIndex].getViewMatrix() * M;
-  MVP= m_cameras[m_cameraIndex].getProjectionMatrix()*MV;
-  normalMatrix=MV;
-  normalMatrix.inverse().transpose();
-  shader->setUniform("MV",MV);
-  shader->setUniform("MVP",MVP);
-  shader->setUniform("normalMatrix",normalMatrix);
-  shader->setUniform("M",M);
-  shader->setUniform("viewerPos",m_cameras[m_cameraIndex].getEye().toVec3());
+   transform t;
+   t.M= m_mouseGlobalTX*m_transform.getMatrix();
 
+   t.MVP=m_cameras[m_cameraIndex].getVPMatrix()*t.M;
+   t.normalMatrix=t.M;
+   t.normalMatrix.inverse().transpose();
+   shader->setUniformBuffer("TransformUBO",sizeof(transform),&t.MVP.m_00);
+   shader->setUniform("camPos",m_cameras[m_cameraIndex].getEye().toVec3());
+   // Now do lights
+   const float on=100.0f;
+   const float off=0.0f;
+   for(size_t i=0; i<3; ++i)
+   {
+     std::string light = fmt::format("lightColour[{0}]",i);
+     if( m_lights[i] == true)
+     {
+       shader->setUniform(light,on,on,on);
+     }
+     else
+     {
+       shader->setUniform(light,off,off,off);
+     }
+   }
 }
 
 void NGLScene::paintGL()
@@ -205,42 +228,7 @@ void NGLScene::paintGL()
   rotY.rotateY(m_win.spinYFace);
   // multiply the rotations
   m_mouseGlobalTX=rotY*rotX;
-  // now set this value in the shader for the current Camera, we do all 3 elements as they
-  // can all change per frame
-  shader->use("Phong");
-  ngl::Mat4 lt=m_cameras[m_cameraIndex].getViewMatrix();
-  lt.transpose();
 
-  ngl::Light L1(ngl::Vec3(-2,0,0),ngl::Colour(0.6,0.6,0.6,1),ngl::LightModes::DIRECTIONALLIGHT);
-  ngl::Light L2(ngl::Vec3(2,0,0),ngl::Colour(0.6,0.6,0.6,1),ngl::LightModes::DIRECTIONALLIGHT);
-  ngl::Light L3(ngl::Vec3(0,2,0),ngl::Colour(0.6 ,0.6,0.6,1),ngl::LightModes::POINTLIGHT);
-  L1.setSpecColour(ngl::Colour(1,1,1));
-  L2.setSpecColour(ngl::Colour(1,1,1));
-  L3.setSpecColour(ngl::Colour(1,1,1));
-  L1.disable();
-  L2.disable();
-  L3.disable();
-  if( m_lights[0] == true)
-  {
-    L1.setTransform(lt);
-    L1.enable();
-  }
-  L1.loadToShader("light[0]");
-
-  if( m_lights[1] == true)
-  {
-    L2.setTransform(lt);
-    L2.enable();
-  }
-  L2.loadToShader("light[1]");
-
-  if( m_lights[2] == true)
-  {
-    L3.setTransform(lt);
-
-    L3.enable();
-  }
-  L3.loadToShader("light[2]");
 
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
   m_transform.setRotation(0,m_rotation,0);
@@ -249,10 +237,7 @@ void NGLScene::paintGL()
   loadMatricesToShader();
   prim->draw("teapot");
 
-  // activate the shader
-  shader->use("Phong");
-  // push a transform
-    ngl::Mat4 tp;
+  ngl::Mat4 tp;
   m_transform.reset();
   {
 
@@ -308,7 +293,7 @@ void NGLScene::paintGL()
   {
 
    // now render the text using the QT renderText helper function
-   m_text->setColour(ngl::Colour(1,1,1));
+   m_text->setColour(1.0f,1.0f,1.0f);
    m_text->renderText(10,18,"Use Arrow Keys to move Camera i and o to move in and out");
    m_text->renderText(10,18*2,"Use keys 0-4 to switch cameras");
    m_text->renderText(10,18*3,"r roll, y yaw, p pitch");
@@ -335,7 +320,7 @@ void NGLScene::paintGL()
    m_text->renderText(tp,18*2,text );
    m_text->renderText(tp,18*3,"ModelView Matrix" );
    // now we use the QString sprintf
-   m_text->setColour(ngl::Colour(1,1,0));
+   m_text->setColour((1.0f,1.0f,0.0f));
 
    ngl::Mat4 m=m_cameras[m_cameraIndex].getViewMatrix();
    text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[0],m.openGL()[4],m.openGL()[8],m.openGL()[12]);
@@ -360,7 +345,7 @@ void NGLScene::paintGL()
    m_text->renderText(tp,18*11,text );
    text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[3],m.openGL()[7],m.openGL()[11],m.openGL()[15]);
    m_text->renderText(tp,18*12,text );
-   m_text->setColour(ngl::Colour(0,0,0));
+   m_text->setColour(0.0f,0.0f,0.0f);
 
    text=QString("Light 0 = %1 Light 1 %2 Light 2 %3").arg(m_lights[0] ? "On" : "Off").arg(m_lights[1] ? "On" : "Off").arg(m_lights[2] ? "On" : "Off");
    m_text->renderText(tp,18*13,text );

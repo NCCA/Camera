@@ -1,12 +1,10 @@
 #ifndef NGLSCENE_H_
 #define NGLSCENE_H_
-#include <ngl/Camera.h>
-#include <ngl/Colour.h>
-#include <ngl/Light.h>
+#include <QOpenGLWindow>
 #include <ngl/Text.h>
 #include <ngl/Transformation.h>
 #include "WindowParams.h"
-#include <QOpenGLWindow>
+#include "Camera.h"
 #include <array>
 #include <memory>
 //----------------------------------------------------------------------------------------------------------------------
@@ -33,7 +31,7 @@ class NGLScene : public QOpenGLWindow
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief dtor must close down ngl and release OpenGL resources
     //----------------------------------------------------------------------------------------------------------------------
-    ~NGLScene();
+    ~NGLScene() override;
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief the initialize class is called once when the window is created and we have a valid GL context
     /// use this to setup any default GL stuff
@@ -61,7 +59,7 @@ private:
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief a container for our Cameras
     //----------------------------------------------------------------------------------------------------------------------
-    std::vector <ngl::Camera > m_cameras;
+    std::vector <Camera > m_cameras;
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief an index into the active camera list
     //----------------------------------------------------------------------------------------------------------------------
