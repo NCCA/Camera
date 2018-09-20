@@ -320,7 +320,7 @@ void NGLScene::paintGL()
    m_text->renderText(tp,18*2,text );
    m_text->renderText(tp,18*3,"ModelView Matrix" );
    // now we use the QString sprintf
-   m_text->setColour((1.0f,1.0f,0.0f));
+   m_text->setColour(1.0f,1.0f,0.0f);
 
    ngl::Mat4 m=m_cameras[m_cameraIndex].getViewMatrix();
    text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[0],m.openGL()[4],m.openGL()[8],m.openGL()[12]);

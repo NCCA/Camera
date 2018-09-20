@@ -1,10 +1,10 @@
 #ifndef NGLSCENE_H_
 #define NGLSCENE_H_
-#include <QOpenGLWindow>
 #include <ngl/Text.h>
 #include <ngl/Transformation.h>
 #include "WindowParams.h"
 #include "Camera.h"
+#include <QOpenGLWindow>
 #include <array>
 #include <memory>
 //----------------------------------------------------------------------------------------------------------------------
