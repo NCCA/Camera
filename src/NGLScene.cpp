@@ -9,7 +9,7 @@
 #include <ngl/NGLInit.h>
 #include <ngl/VAOPrimitives.h>
 #include <ngl/ShaderLib.h>
-#include <ngl/fmt/format.h>
+#include <fmt/format.h>
 constexpr auto shaderProgram="PBR";
 NGLScene::NGLScene()
 {
@@ -79,95 +79,92 @@ void NGLScene::resizeGL( int _w, int _h )
   m_aspect=static_cast<float>(_w/_h);
   m_win.width=static_cast<int>(_w*devicePixelRatio());
   m_win.height=static_cast<int>(_h*devicePixelRatio());
+ m_text->setScreenSize(m_win.width,m_win.height);
  }
 
 void NGLScene::initializeGL()
 {
-  ngl::NGLInit::instance();
+  ngl::NGLInit::initalize();
+
   glClearColor(0.4f, 0.4f, 0.4f, 1.0f);			   // Grey Background
   // enable depth testing for drawing
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
 
   createCameras();
-  // create an instance of the VBO primitive
-  ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
-  // create a plane
-  prim->createLineGrid("plane",20,20,30);
-  prim->createSphere("sphere",1.0,150);
+  // create a plane and sphere
+  ngl::VAOPrimitives::createLineGrid("plane",20,20,30);
+  ngl::VAOPrimitives::createSphere("sphere",1.0,150);
 
 
 
   // now to load the shader and set the values
-  // grab an instance of shader manager
-  ngl::ShaderLib* shader = ngl::ShaderLib::instance();
   // we are creating a shader called PBR to save typos
   // in the code create some constexpr
   constexpr auto vertexShader  = "PBRVertex";
   constexpr auto fragShader    = "PBRFragment";
   // create the shader program
-  shader->createShaderProgram( shaderProgram );
+  ngl::ShaderLib::createShaderProgram( shaderProgram );
   // now we are going to create empty shaders for Frag and Vert
-  shader->attachShader( vertexShader, ngl::ShaderType::VERTEX );
-  shader->attachShader( fragShader, ngl::ShaderType::FRAGMENT );
+  ngl::ShaderLib::attachShader( vertexShader, ngl::ShaderType::VERTEX );
+  ngl::ShaderLib::attachShader( fragShader, ngl::ShaderType::FRAGMENT );
   // attach the source
-  shader->loadShaderSource( vertexShader, "shaders/PBRVertex.glsl" );
-  shader->loadShaderSource( fragShader, "shaders/PBRFragment.glsl" );
+  ngl::ShaderLib::loadShaderSource( vertexShader, "shaders/PBRVertex.glsl" );
+  ngl::ShaderLib::loadShaderSource( fragShader, "shaders/PBRFragment.glsl" );
   // compile the shaders
-  shader->compileShader( vertexShader );
-  shader->compileShader( fragShader );
+  ngl::ShaderLib::compileShader( vertexShader );
+  ngl::ShaderLib::compileShader( fragShader );
   // add them to the program
-  shader->attachShaderToProgram( shaderProgram, vertexShader );
-  shader->attachShaderToProgram( shaderProgram, fragShader );
+  ngl::ShaderLib::attachShaderToProgram( shaderProgram, vertexShader );
+  ngl::ShaderLib::attachShaderToProgram( shaderProgram, fragShader );
   // now we have associated that data we can link the shader
-  shader->linkProgramObject( shaderProgram );
+  ngl::ShaderLib::linkProgramObject( shaderProgram );
   // and make it active ready to load values
-  ( *shader )[ shaderProgram ]->use();
+  ngl::ShaderLib::use( shaderProgram);
  // We now create our view matrix for a static camera
   ngl::Vec3 from( 0.0f, 2.0f, 2.0f );
   ngl::Vec3 to( 0.0f, 0.0f, 0.0f );
   ngl::Vec3 up( 0.0f, 1.0f, 0.0f );
   // setup the default shader material and light porerties
   // these are "uniform" so will retain their values
-  shader->setUniform("lightColour[0]",100.0f,100.0f,100.0f);
-  shader->setUniform("lightColour[1]",100.0f,100.0f,100.0f);
-  shader->setUniform("lightColour[2]",100.0f,100.0f,100.0f);
-  shader->setUniform("exposure",2.2f);
-  shader->setUniform("albedo",0.950f, 0.71f, 0.29f);
+  ngl::ShaderLib::setUniform("lightColour[0]",100.0f,100.0f,100.0f);
+  ngl::ShaderLib::setUniform("lightColour[1]",100.0f,100.0f,100.0f);
+  ngl::ShaderLib::setUniform("lightColour[2]",100.0f,100.0f,100.0f);
+  ngl::ShaderLib::setUniform("exposure",2.2f);
+  ngl::ShaderLib::setUniform("albedo",0.950f, 0.71f, 0.29f);
 
-  shader->setUniform("metallic",1.02f);
-  shader->setUniform("roughness",0.38f);
-  shader->setUniform("ao",0.2f);
-  shader->setUniform("lightPosition[0]",-2.0f,0.0f,1.0f);
-  shader->setUniform("lightPosition[1]", 2.0f,0.0f,1.0f);
-  shader->setUniform("lightPosition[2]", 0.0f,2.0f,1.0f);
+  ngl::ShaderLib::setUniform("metallic",1.02f);
+  ngl::ShaderLib::setUniform("roughness",0.38f);
+  ngl::ShaderLib::setUniform("ao",0.2f);
+  ngl::ShaderLib::setUniform("lightPosition[0]",-2.0f,0.0f,1.0f);
+  ngl::ShaderLib::setUniform("lightPosition[1]", 2.0f,0.0f,1.0f);
+  ngl::ShaderLib::setUniform("lightPosition[2]", 0.0f,2.0f,1.0f);
 
-  shader->createShaderProgram("Colour");
+  ngl::ShaderLib::createShaderProgram("Colour");
 
-  shader->attachShader("ColourVertex",ngl::ShaderType::VERTEX);
-  shader->attachShader("ColourFragment",ngl::ShaderType::FRAGMENT);
-  shader->loadShaderSource("ColourVertex","shaders/Colour.vs");
-  shader->loadShaderSource("ColourFragment","shaders/Colour.fs");
+  ngl::ShaderLib::attachShader("ColourVertex",ngl::ShaderType::VERTEX);
+  ngl::ShaderLib::attachShader("ColourFragment",ngl::ShaderType::FRAGMENT);
+  ngl::ShaderLib::loadShaderSource("ColourVertex","shaders/Colour.vs");
+  ngl::ShaderLib::loadShaderSource("ColourFragment","shaders/Colour.fs");
 
-  shader->compileShader("ColourVertex");
-  shader->compileShader("ColourFragment");
-  shader->attachShaderToProgram("Colour","ColourVertex");
-  shader->attachShaderToProgram("Colour","ColourFragment");
+  ngl::ShaderLib::compileShader("ColourVertex");
+  ngl::ShaderLib::compileShader("ColourFragment");
+  ngl::ShaderLib::attachShaderToProgram("Colour","ColourVertex");
+  ngl::ShaderLib::attachShaderToProgram("Colour","ColourFragment");
 
-  shader->bindAttribute("Colour",0,"inVert");
-  shader->linkProgramObject("Colour");
-  (*shader)["Colour"]->use();
-  shader->setUniform("Colour",1.0f,1.0f,1.0f,1.0f);
+  ngl::ShaderLib::bindAttribute("Colour",0,"inVert");
+  ngl::ShaderLib::linkProgramObject("Colour");
+  ngl::ShaderLib::use("Colour");
+  ngl::ShaderLib::setUniform("Colour",1.0f,1.0f,1.0f,1.0f);
 
-  m_text.reset(new  ngl::Text(QFont("Arial",18)));
-  m_text->setScreenSize(width(),height());
+  m_text = std::make_unique<ngl::Text>("fonts/Arial.ttf",18);
+  m_text->setScreenSize(1024,720);
 }
 
 
 void NGLScene::loadMatricesToShader()
 {
-  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-  shader->use("PBR");
+  ngl::ShaderLib::use("PBR");
   struct transform
   {
     ngl::Mat4 MVP;
@@ -181,8 +178,8 @@ void NGLScene::loadMatricesToShader()
    t.MVP=m_cameras[m_cameraIndex].getVPMatrix()*t.M;
    t.normalMatrix=t.M;
    t.normalMatrix.inverse().transpose();
-   shader->setUniformBuffer("TransformUBO",sizeof(transform),&t.MVP.m_00);
-   shader->setUniform("camPos",m_cameras[m_cameraIndex].getEye().toVec3());
+   ngl::ShaderLib::setUniformBuffer("TransformUBO",sizeof(transform),&t.MVP.m_00);
+   ngl::ShaderLib::setUniform("camPos",m_cameras[m_cameraIndex].getEye().toVec3());
    // Now do lights
    const float on=100.0f;
    const float off=0.0f;
@@ -191,34 +188,22 @@ void NGLScene::loadMatricesToShader()
      std::string light = fmt::format("lightColour[{0}]",i);
      if( m_lights[i] == true)
      {
-       shader->setUniform(light,on,on,on);
+       ngl::ShaderLib::setUniform(light,on,on,on);
      }
      else
      {
-       shader->setUniform(light,off,off,off);
+       ngl::ShaderLib::setUniform(light,off,off,off);
      }
    }
 }
 
 void NGLScene::paintGL()
 {
-  // grab an instance of the shader manager
-  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glViewport(0,0,m_win.width,m_win.height);
   // set the text transforms
-  float x,y;
-  float mw=1490;
-  float mh=900;
-  x=1.1f-float(mw-m_win.width)/mw;
-  y=1.1f-float(mh-m_win.height)/mh;
-  m_text->setScreenSize(width(),height());
-  m_text->setTransform(x,y);
-
-  // Rotation based on the mouse position for our global
-  // transform
-
+  
   // Rotation based on the mouse position for our global
   // transform
   ngl::Mat4 rotX;
@@ -230,12 +215,11 @@ void NGLScene::paintGL()
   m_mouseGlobalTX=rotY*rotX;
 
 
-  ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
   m_transform.setRotation(0,m_rotation,0);
   m_transform.setPosition(0.0f,0.0f,0.0f);
 
   loadMatricesToShader();
-  prim->draw("teapot");
+  ngl::VAOPrimitives::draw("teapot");
 
   ngl::Mat4 tp;
   m_transform.reset();
@@ -250,7 +234,7 @@ void NGLScene::paintGL()
     // draw
     tp=m_transform.getMatrix();
 
-    prim->draw("cube");
+    ngl::VAOPrimitives::draw("cube");
   }
   // now we draw the football
   m_transform.reset();
@@ -261,14 +245,14 @@ void NGLScene::paintGL()
     m_transform.setRotation(m_rotation,m_rotation,m_rotation);
     loadMatricesToShader();
     // draw the football
-    prim->draw("football");
+    ngl::VAOPrimitives::draw("football");
   }
   // now we are going to draw the help
 
   // now we are going to draw the grid in wireframe mode
   glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
   // load the colour  shader and set the values,
-  shader->use("Colour");
+  ngl::ShaderLib::use("Colour");
   // now push the tx stack it helps to use { } to block off the transforms
   m_transform.reset();
   {
@@ -278,11 +262,11 @@ void NGLScene::paintGL()
     MVP=m_cameras[m_cameraIndex].getVPMatrix() *
         m_mouseGlobalTX *
         m_transform.getMatrix() ;
-    shader->setUniform("MVP",MVP);
+    ngl::ShaderLib::setUniform("MVP",MVP);
 
     // now we pass this modelling transform to the shader ModelMatrix
     // finally draw the plane
-    prim->draw("plane");
+    ngl::VAOPrimitives::draw("plane");
   }
   // now go back to solid drawing
   glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
@@ -293,62 +277,65 @@ void NGLScene::paintGL()
   {
 
    // now render the text using the QT renderText helper function
-   m_text->setColour(1.0f,1.0f,1.0f);
-   m_text->renderText(10,18,"Use Arrow Keys to move Camera i and o to move in and out");
-   m_text->renderText(10,18*2,"Use keys 0-4 to switch cameras");
-   m_text->renderText(10,18*3,"r roll, y yaw, p pitch");
-   m_text->renderText(10,18*4,"e move eye mode");
-   m_text->renderText(10,18*5,"l move look mode");
-   m_text->renderText(10,18*6,"b move eye and look mode");
-   m_text->renderText(10,18*7,"s slide mode" );
-   m_text->renderText(10,18*8,"+/- change fov of Camera" );
-   m_text->renderText(10,18*9,"z,x,c toggle lights on and off" );
-   m_text->renderText(10,18*10,"h toggles help" );
+   m_text->setColour(1.0f,1.0f,0.0f);
+   int pos=700;
+   m_text->renderText(10,700,"Use Arrow Keys to move Camera i and o to move in and out");
+   m_text->renderText(10,(pos-=19),"Use keys 0-4 to switch cameras");
+   m_text->renderText(10,(pos-=19),"r roll, y yaw, p pitch");
+   m_text->renderText(10,(pos-=19),"e move eye mode");
+   m_text->renderText(10,(pos-=19),"l move look mode");
+   m_text->renderText(10,(pos-=19),"b move eye and look mode");
+   m_text->renderText(10,(pos-=19),"s slide mode" );
+   m_text->renderText(10,(pos-=19),"+/- change fov of Camera" );
+   m_text->renderText(10,(pos-=19),"z,x,c toggle lights on and off" );
+   m_text->renderText(10,(pos-=19),"h toggles help" );
    // now we are going to construct a string to draw the mode information
-   QString mode;
+   std::string mode;
    switch ( m_moveMode)
    {
-     case CamMode::MOVEEYE : mode=QString("Move Eye"); break;
-     case CamMode::MOVELOOK : mode=QString("Move Look"); break;
-     case CamMode::MOVEBOTH : mode=QString("Move Both"); break;
-     case CamMode::MOVESLIDE : mode=QString("Move Slide"); break;
+     case CamMode::MOVEEYE : mode="Move Eye"; break;
+     case CamMode::MOVELOOK : mode="Move Look"; break;
+     case CamMode::MOVEBOTH : mode="Move Both"; break;
+     case CamMode::MOVESLIDE : mode="Move Slide"; break;
    }
-   const static int tp=880;
-   QString text=QString("Active Camera %1 current mode=%2").arg(m_cameraIndex).arg(mode);
-   m_text->renderText(tp,18,text );
-   text=QString("FOV = %1 ").arg(m_fov);
-   m_text->renderText(tp,18*2,text );
-   m_text->renderText(tp,18*3,"ModelView Matrix" );
+   pos=700;
+   const static int tp=700;
+   std::string text=fmt::format("Active Camera {} current mode {}",m_cameraIndex,mode);
+   m_text->renderText(tp,pos,text );
+   text=fmt::format("FOV = {} ",m_fov);
+   m_text->renderText(tp,(pos-=18),text );
+   m_text->renderText(tp,(pos-=18),"ModelView Matrix" );
    // now we use the QString sprintf
    m_text->setColour(1.0f,1.0f,0.0f);
 
    ngl::Mat4 m=m_cameras[m_cameraIndex].getViewMatrix();
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[0],m.openGL()[4],m.openGL()[8],m.openGL()[12]);
-   m_text->renderText(tp,18*4,text );
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[1],m.openGL()[5],m.openGL()[9],m.openGL()[13]);
-   m_text->renderText(tp,18*5,text );
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[2],m.openGL()[6],m.openGL()[10],m.openGL()[14]);
-   m_text->renderText(tp,18*6,text );
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[3],m.openGL()[7],m.openGL()[11],m.openGL()[15]);
-   m_text->renderText(tp,18*7,text );
+
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[0],m.openGL()[4],m.openGL()[8],m.openGL()[12]);
+   m_text->renderText(tp,(pos-=18),text );
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[1],m.openGL()[5],m.openGL()[9],m.openGL()[13]);
+   m_text->renderText(tp,(pos-=18),text );
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[2],m.openGL()[6],m.openGL()[10],m.openGL()[14]);
+   m_text->renderText(tp,(pos-=18),text );
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[3],m.openGL()[7],m.openGL()[11],m.openGL()[15]);
+   m_text->renderText(tp,(pos-=18),text );
 
    m_text->setColour(1,1,1);
-   m_text->renderText(tp,18*8,"Projection Matrix" );
+   m_text->renderText(tp,(pos-=18),"Projection Matrix" );
    // now we use the QString sprintf
    m_text->setColour(1,1,0);
    m=m_cameras[m_cameraIndex].getProjectionMatrix();
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[0],m.openGL()[4],m.openGL()[8],m.openGL()[12]);
-   m_text->renderText(tp,18*9,text );
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[1],m.openGL()[5],m.openGL()[9],m.openGL()[13]);
-   m_text->renderText(tp,18*10,text );
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[2],m.openGL()[6],m.openGL()[10],m.openGL()[14]);
-   m_text->renderText(tp,18*11,text );
-   text.sprintf("[ %+0.4f %+0.4f %+0.4f %+0.4f]",m.openGL()[3],m.openGL()[7],m.openGL()[11],m.openGL()[15]);
-   m_text->renderText(tp,18*12,text );
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[0],m.openGL()[4],m.openGL()[8],m.openGL()[12]);
+   m_text->renderText(tp,(pos-=18),text );
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[1],m.openGL()[5],m.openGL()[9],m.openGL()[13]);
+   m_text->renderText(tp,(pos-=18),text );
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[2],m.openGL()[6],m.openGL()[10],m.openGL()[14]);
+   m_text->renderText(tp,(pos-=18),text );
+   text=fmt::format("[ {:+0.4f} {:+0.4f} {:+0.4f} {:+0.4f}]",m.openGL()[3],m.openGL()[7],m.openGL()[11],m.openGL()[15]);
+   m_text->renderText(tp,(pos-=18),text );
    m_text->setColour(0.0f,0.0f,0.0f);
 
-   text=QString("Light 0 = %1 Light 1 %2 Light 2 %3").arg(m_lights[0] ? "On" : "Off").arg(m_lights[1] ? "On" : "Off").arg(m_lights[2] ? "On" : "Off");
-   m_text->renderText(tp,18*13,text );
+   text=fmt::format("Light 0 = {} Light 1 {} Light 2 {}",m_lights[0] ? "On" : "Off" , m_lights[1] ? "On" : "Off" ,m_lights[2] ? "On" : "Off");
+   m_text->renderText(tp,(pos-=18),text );
 
   }
 }
