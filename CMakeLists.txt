@@ -5,6 +5,11 @@ project(CameraBuild)
 set(TargetName Camera )
 # Instruct CMake to run moc automatically when needed (Qt projects only)
 set(CMAKE_AUTOMOC ON)
+# use C++ 17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+option(ENABLE_FAST_MATH ON)
 # find Qt libs
 find_package(Qt5Widgets)
 #find_package(Qt5 COMPONENTS Widgets OpenGL core Gui REQUIRED)
@@ -14,8 +19,7 @@ add_executable(${TargetName})
 
 # Add NGL include path
 include_directories(include $ENV{HOME}/NGL/include)
-# use C++ 17
-set(CMAKE_CXX_STANDARD 17)
+
 target_sources(${TargetName} PRIVATE ${PROJECT_SOURCE_DIR}/src/main.cpp  
 			${PROJECT_SOURCE_DIR}/src/NGLScene.cpp  
 			${PROJECT_SOURCE_DIR}/src/Camera.cpp  

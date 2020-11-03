@@ -10,6 +10,7 @@
 #include <ngl/VAOPrimitives.h>
 #include <ngl/ShaderLib.h>
 #include <fmt/format.h>
+#include <memory>
 constexpr auto shaderProgram="PBR";
 NGLScene::NGLScene()
 {
@@ -79,12 +80,12 @@ void NGLScene::resizeGL( int _w, int _h )
   m_aspect=static_cast<float>(_w/_h);
   m_win.width=static_cast<int>(_w*devicePixelRatio());
   m_win.height=static_cast<int>(_h*devicePixelRatio());
- m_text->setScreenSize(m_win.width,m_win.height);
+ m_text->setScreenSize(_w,_h);
  }
 
 void NGLScene::initializeGL()
 {
-  ngl::NGLInit::initalize();
+  ngl::NGLInit::initialize();
 
   glClearColor(0.4f, 0.4f, 0.4f, 1.0f);			   // Grey Background
   // enable depth testing for drawing
