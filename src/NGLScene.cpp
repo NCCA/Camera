@@ -10,6 +10,7 @@
 #include <ngl/ShaderLib.h>
 #include <fmt/format.h>
 #include <memory>
+#include <iostream>
 constexpr auto shaderProgram = "PBR";
 NGLScene::NGLScene()
 {
