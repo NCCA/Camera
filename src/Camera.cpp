@@ -51,8 +51,8 @@ Camera::Camera() noexcept
 void Camera ::setDefaultCamera() noexcept
 {
   // make default camera
-  m_eye = 1.0f;
-  m_look = 0.0f;
+  m_eye.set(1.0f,1.0f,1.0f);
+  m_look.set(0.0f,0.0f,0.0f);
   m_up.set(ngl::Vec4::up());
   m_fov = 45.0;
   m_zNear = 0.0001f;
